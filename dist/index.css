@@ -60,3 +60,7 @@ html, body {
     background-color: #fcfcfc;
     cursor: text;
 }
+
+#notes .note * {
+    border: 1px solid #F00;
+}

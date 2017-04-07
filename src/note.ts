@@ -59,6 +59,20 @@ export class Note {
         element.style.left = `${this.screenCoordinates.x - DEFAULT_WIDTH / 2}px`;
         element.style.top = `${this.screenCoordinates.y - DEFAULT_HEIGHT / 2}px`;
         element.setAttribute("dragging", "");
+        element.onmousemove = function (event: MouseEvent) {
+            if (event.target == element && event.buttons & 1) {
+                var startdrag = JSON.parse(this.getAttribute("startdrag"));
+                var px = startdrag.x;
+                var py = startdrag.y;
+                var dx = event.clientX - px;
+                var dy = event.clientY - py;
+                var left = parseInt(document.getElementById(element.id).style.left);
+                var top = parseInt(document.getElementById(element.id).style.top);
+                document.getElementById(element.id).style.left = (left + dx) + "px";
+                document.getElementById(element.id).style.top = (top + dy) + "px";
+                element.setAttribute("startdrag", JSON.stringify({ "x": event.clientX, "y": event.clientY }));
+            }
+        };
         element.onmousedown = function (event: MouseEvent) {
             if (event.target == element) {
                 element.setAttribute("dragging", "true");
@@ -71,8 +85,7 @@ export class Note {
             element.style.cursor = "text";
         };
 
-        var editor = document.createElement("div");
-        editor.className = "editor";
+        var topbar: HTMLElement = document.createElement("div");
         return element;
     }
     show() {
