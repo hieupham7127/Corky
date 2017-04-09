@@ -43,14 +43,34 @@ function onmousemove(event: MouseEvent) {
                 var py: number = startdrag.y;
                 var dx = event.clientX - px;
                 var dy = event.clientY - py;
-                var resizeH = function (moveLeft: boolean) {
-                    if (pw + dx > 64) {
-                        note.resize(pw + dx, ph, { x: nx + dx / 2, y: ny });
-                    }
-                };
                 switch (direction) {
+                    case "lm":
+                        if (pw - dx > 64) {
+                            note.resize(pw - dx, ph, { x: nx + dx / 2, y: ny });
+                        }
+                        break;
+                    case "lb":
+                        if (pw - dx > 64 && ph + dy > 84) {
+                            note.resize(pw - dx, ph + dy, { x: nx + dx / 2, y: ny + dy / 2 });
+                        }
+                        break;
+                    case "mb":
+                        if (ph + dy > 84) {
+                            note.resize(pw, ph + dy, { x: nx, y: ny + dy / 2 });
+                        }
+                        break;
+                    case "rb":
+                        if (pw + dx > 64 && ph + dy > 84) {
+                            note.resize(pw + dx, ph + dy, { x: nx + dx / 2, y: ny + dy / 2 });
+                        }
+                        break;
                     case "rm":
-                        resizeH(false);
+                        if (pw + dx > 64) {
+                            note.resize(pw + dx, ph, { x: nx + dx / 2, y: ny });
+                        }
+                        break;
+                    default:
+                        // fuck you
                         break;
                 }
             }
