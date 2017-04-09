@@ -55,12 +55,59 @@ html, body {
 }
 
 #notes .note {
-    border-radius: 12px;
     box-shadow: 0px 0px 12px rgba(0, 0, 0, 0.5);
+    background-color: #ececec;
+    border-radius: 5px;
+}
+
+#notes .note .topbar {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    background-color: #ececec;
+}
+
+#notes .note .dragger.lm {
+    cursor: w-resize;
+}
+
+#notes .note .dragger.lb {
+    border-bottom-left-radius: 5px;
+    cursor: sw-resize;
+}
+
+#notes .note .dragger.mb {
+    cursor: s-resize;
+}
+
+#notes .note .dragger.rb {
+    border-bottom-right-radius: 5px;
+    cursor: se-resize;
+}
+
+#notes .note .dragger.rm {
+    cursor: e-resize;
+}
+
+#notes .note .editor {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
     background-color: #fcfcfc;
+    outline: none;
+    font-size: 12pt;
+    overflow-y: auto;
+    border: 2px solid rgba(0, 0, 0, 0);
+    padding: 10px;
     cursor: text;
 }
 
+#notes .note .editor:focus {
+    border: 2px solid #00ccff;
+}
+
+#notes .note .dragger {
+    background-color: #ececec;
+}
+
 #notes .note * {
-    border: 1px solid #F00;
+    box-sizing: border-box;
 }

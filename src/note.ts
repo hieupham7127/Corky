@@ -1,7 +1,7 @@
 import { randomString } from "./util";
 
-const DEFAULT_WIDTH = 400;
-const DEFAULT_HEIGHT = 300;
+const topbar_s: number = 45;
+const resizebar_s: number = 10;
 
 export enum NoteType {
     Plain = 0,
@@ -10,12 +10,17 @@ export enum NoteType {
 
 export interface ISerializedNote {
     type: number;
+    lastModified: number
 }
 
 export class Note {
+    public static notes: Note[] = [];
     private _type: NoteType;
     private x: number;
     private y: number;
+    private _width: number;
+    private _height: number;
+    private z: number;
     private _id: string;
     private _element: HTMLElement;
     public Note() {
@@ -35,6 +40,18 @@ export class Note {
         this.x = coordinates.x;
         this.y = coordinates.y;
     }
+    get width(): number {
+        return this._width;
+    }
+    set width(_width: number) {
+        this._width = _width;
+    }
+    get height(): number {
+        return this._height;
+    }
+    set height(_height: number) {
+        this._height = _height;
+    }
     get id(): string {
         if (!this._id)
             this._id = randomString();
@@ -48,33 +65,50 @@ export class Note {
     }
     get element(): HTMLElement {
         var element: HTMLElement;
-        if ((element = document.getElementById("note-" + this.id)) != null)
+        let note: Note = this;
+        if ((element = document.getElementById("note-" + this.id)) != null) {
             return element;
+        }
         element = document.createElement("div");
         element.id = "note-" + this.id;
         element.className = "note";
         element.style.position = "absolute";
-        element.style.width = `${DEFAULT_WIDTH}px`;
-        element.style.height = `${DEFAULT_HEIGHT}px`;
-        element.style.left = `${this.screenCoordinates.x - DEFAULT_WIDTH / 2}px`;
-        element.style.top = `${this.screenCoordinates.y - DEFAULT_HEIGHT / 2}px`;
         element.setAttribute("dragging", "");
-        element.onmousemove = function (event: MouseEvent) {
-            if (event.target == element && event.buttons & 1) {
-                var startdrag = JSON.parse(this.getAttribute("startdrag"));
-                var px = startdrag.x;
-                var py = startdrag.y;
-                var dx = event.clientX - px;
-                var dy = event.clientY - py;
-                var left = parseInt(document.getElementById(element.id).style.left);
-                var top = parseInt(document.getElementById(element.id).style.top);
-                document.getElementById(element.id).style.left = (left + dx) + "px";
-                document.getElementById(element.id).style.top = (top + dy) + "px";
+
+        var topbar: HTMLElement = document.createElement("div");
+        topbar.id = this.id + ":topbar";
+        topbar.className = "topbar";
+        topbar.style.position = "absolute";
+        element.appendChild(topbar);
+
+        for (let position of ["lm", "lb", "mb", "rb", "rm"]) {
+            var dragger: HTMLElement = document.createElement("div");
+            dragger.id = this.id + ":" + position;
+            dragger.className = "dragger " + position;
+            dragger.style.position = "absolute";
+            dragger.onmousedown = function (event: MouseEvent) {
+                element.setAttribute("resizing", position);
+                element.setAttribute("startloc", JSON.stringify(note.screenCoordinates));
                 element.setAttribute("startdrag", JSON.stringify({ "x": event.clientX, "y": event.clientY }));
-            }
+                element.setAttribute("startresize", JSON.stringify({ "w": note.width, "h": note.height }));
+            };
+            element.appendChild(dragger);
+        }
+
+        var editor: HTMLElement = document.createElement("div");
+        editor.contentEditable = "true";
+        editor.id = this.id + ":editor";
+        editor.className = "editor";
+        editor.style.position = "absolute";
+        element.appendChild(editor);
+
+        element.onclick = function (event: MouseEvent) {
+
         };
         element.onmousedown = function (event: MouseEvent) {
-            if (event.target == element) {
+            let target = <HTMLElement>event.target;
+            let topbar = <HTMLElement>element.children.namedItem(note.id + ":topbar");
+            if (target.id == topbar.id) {
                 element.setAttribute("dragging", "true");
                 element.setAttribute("startdrag", JSON.stringify({ "x": event.clientX, "y": event.clientY }));
                 element.style.cursor = "move";
@@ -85,13 +119,63 @@ export class Note {
             element.style.cursor = "text";
         };
 
-        var topbar: HTMLElement = document.createElement("div");
+        let container = document.getElementById("notes");
+        container.appendChild(element);
         return element;
     }
-    show() {
-        let container = document.getElementById("notes");
-        console.log(this.element);
-        container.appendChild(this.element);
+    resize(width: number, height: number, center: { x: number, y: number }): void {
+        this.width = width;
+        this.height = height;
+        this.screenCoordinates = center;
+
+        let note = this.element;
+
+        note.style.width = `${width}px`;
+        note.style.height = `${height}px`;
+        note.style.left = `${center.x - width / 2}px`;
+        note.style.top = `${center.y - height / 2}px`;
+
+        let topbar = <HTMLElement>this.element.children.namedItem(this.id + ":topbar");
+        topbar.style.width = `${width}px`;
+        topbar.style.height = `${topbar_s}px`;
+        topbar.style.left = "0";
+        topbar.style.top = "0";
+
+        let editor = <HTMLElement>this.element.children.namedItem(this.id + ":editor");
+        editor.style.width = `${width - 2 * resizebar_s}px`;
+        editor.style.height = `${height - topbar_s - resizebar_s}px`;
+        editor.style.left = `${resizebar_s}px`;
+        editor.style.top = `${topbar_s}px`;
+
+        let drag_lm = <HTMLElement>this.element.children.namedItem(this.id + ":lm");
+        drag_lm.style.width = `${resizebar_s}px`;
+        drag_lm.style.height = `${height - resizebar_s - topbar_s}px`;
+        drag_lm.style.left = "0";
+        drag_lm.style.top = `${topbar_s}px`;
+
+        let drag_lb = <HTMLElement>this.element.children.namedItem(this.id + ":lb");
+        drag_lb.style.width = `${resizebar_s}px`;
+        drag_lb.style.height = `${resizebar_s}px`;
+        drag_lb.style.left = "0";
+        drag_lb.style.bottom = "0";
+
+        let drag_mb = <HTMLElement>this.element.children.namedItem(this.id + ":mb");
+        drag_mb.style.width = `${width - 2 * resizebar_s}px`;
+        drag_mb.style.height = `${resizebar_s}px`;
+        drag_mb.style.left = `${resizebar_s}px`;
+        drag_mb.style.bottom = "0";
+
+        let drag_rb = <HTMLElement>this.element.children.namedItem(this.id + ":rb");
+        drag_rb.style.width = `${resizebar_s}px`;
+        drag_rb.style.height = `${resizebar_s}px`;
+        drag_rb.style.right = "0";
+        drag_rb.style.bottom = "0";
+
+        let drag_rm = <HTMLElement>this.element.children.namedItem(this.id + ":rm");
+        drag_rm.style.width = `${resizebar_s}px`;
+        drag_rm.style.height = `${height - resizebar_s - topbar_s}px`;
+        drag_rm.style.right = "0";
+        drag_rm.style.top = `${topbar_s}px`;
     }
     static new(x: number, y: number): Note {
         let note = new Note();
@@ -105,7 +189,8 @@ export class Note {
     }
     serialize(): ISerializedNote {
         let data = {
-            "type": this.type
+            "type": this.type,
+            "lastModified": 0
         };
         return data;
     }
