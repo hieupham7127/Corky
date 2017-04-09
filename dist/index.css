@@ -99,8 +99,8 @@ html, body {
     border: 2px solid rgba(0, 0, 0, 0);
     padding: 10px;
     cursor: text;
-    transition: all 0.1s ease-out;
-    -webkit-transition: all 0.3s ease-out;
+    transition: border 0.1s ease-out;
+    -webkit-transition: border 0.3s ease-out;
 }
 
 #notes .note .editor:focus {

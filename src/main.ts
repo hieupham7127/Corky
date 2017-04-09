@@ -10,9 +10,6 @@ async function ondblclick(event: MouseEvent): Promise<void> {
     note.element;
     note.resize(400, 300, { x: event.clientX, y: event.clientY });
     Note.notes.push(note);
-    if (Note.notes.length > 0) {
-        document.getElementById("message").innerText = "";
-    }
 }
 
 function onmousemove(event: MouseEvent) {
@@ -26,10 +23,7 @@ function onmousemove(event: MouseEvent) {
                 var py: number = startdrag.y;
                 var dx = event.clientX - px;
                 var dy = event.clientY - py;
-                var left = parseInt(document.getElementById(element.id).style.left);
-                var top = parseInt(document.getElementById(element.id).style.top);
-                document.getElementById(element.id).style.left = (left + dx) + "px";
-                document.getElementById(element.id).style.top = (top + dy) + "px";
+                note.resize(note.width, note.height, { x: note.screenCoordinates.x + dx, y: note.screenCoordinates.y + dy })
                 element.setAttribute("startdrag", JSON.stringify({ "x": event.clientX, "y": event.clientY }));
             } else if (direction = element.getAttribute("resizing")) {
                 var startresize = JSON.parse(element.getAttribute("startresize"));
@@ -75,11 +69,17 @@ function onmousemove(event: MouseEvent) {
                 }
             }
         }
+        Note.save();
     }
 }
 
 async function init(): Promise<void> {
-    Note.notes = await Storage.get();
+    let notes = await Storage.get();
+
+    for (var note of notes) {
+        Note.load(note);
+    }
+
     notesElement.ondblclick = ondblclick;
     notesElement.onmousemove = onmousemove;
 }

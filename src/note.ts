@@ -1,4 +1,5 @@
 import { randomString } from "./util";
+import { Storage } from "./storage";
 
 const topbar_s: number = 45;
 const resizebar_s: number = 10;
@@ -9,8 +10,13 @@ export enum NoteType {
 }
 
 export interface ISerializedNote {
+    id: string;
     type: number;
-    lastModified: number
+    lastModified: number;
+    coordinates: { x: number, y: number };
+    size: { w: number, h: number };
+    z: number;
+    content: string;
 }
 
 export class Note {
@@ -23,8 +29,10 @@ export class Note {
     private z: number;
     private _id: string;
     private _element: HTMLElement;
-    public Note() {
-        let id = this.id;
+    public Note(id?: string) {
+        if (id) {
+            this._id = id;
+        }
     }
     get screenCoordinates(): { x: number, y: number } {
         return { "x": this.x * window.innerWidth, "y": this.y * window.innerHeight };
@@ -56,6 +64,9 @@ export class Note {
         if (!this._id)
             this._id = randomString();
         return this._id;
+    }
+    set id(_id: string) {
+        this._id = _id;
     }
     get type(): NoteType {
         return this._type;
@@ -100,11 +111,11 @@ export class Note {
         editor.id = this.id + ":editor";
         editor.className = "editor";
         editor.style.position = "absolute";
+        editor.onkeyup = function (event: KeyboardEvent) {
+            Note.save();
+        };
         element.appendChild(editor);
 
-        element.onclick = function (event: MouseEvent) {
-
-        };
         element.onmousedown = function (event: MouseEvent) {
             let target = <HTMLElement>event.target;
             let topbar = <HTMLElement>element.children.namedItem(note.id + ":topbar");
@@ -121,6 +132,9 @@ export class Note {
 
         let container = document.getElementById("notes");
         container.appendChild(element);
+        if (Note.notes.length > 0) {
+            document.getElementById("message").innerText = "";
+        }
         return element;
     }
     resize(width: number, height: number, center: { x: number, y: number }): void {
@@ -177,6 +191,11 @@ export class Note {
         drag_rm.style.right = "0";
         drag_rm.style.top = `${topbar_s}px`;
     }
+    static load(note: Note): void {
+        note.element;
+        note.resize(note.width, note.height, note.screenCoordinates);
+        Note.notes.push(note);
+    }
     static new(x: number, y: number): Note {
         let note = new Note();
         note.screenCoordinates = { "x": x, "y": y };
@@ -184,14 +203,32 @@ export class Note {
     }
     static deserialize(data: ISerializedNote): Note {
         let note = new Note();
+        note.id = data.id;
         note.type = data.type;
+        note.x = data.coordinates.x;
+        note.y = data.coordinates.y;
+        note.width = data.size.w;
+        note.height = data.size.h;
+        note.z = data.z;
+
+        let editor = <HTMLElement>note.element.children.namedItem(note.id + ":editor");
+        editor.innerHTML = data.content;
         return note;
     }
     serialize(): ISerializedNote {
+        let editor = <HTMLElement>this.element.children.namedItem(this.id + ":editor");
         let data = {
             "type": this.type,
-            "lastModified": 0
+            "lastModified": 0, // TODO
+            "id": this.id,
+            "coordinates": { "x": this.x, "y": this.y },
+            "size": { "w": this.width, "h": this.height },
+            "z": this.z,
+            "content": editor.innerHTML
         };
         return data;
+    }
+    static save() {
+        Storage.set(Note.notes);
     }
 }
