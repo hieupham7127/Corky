@@ -90,6 +90,9 @@ export class Note {
         topbar.id = this.id + ":topbar";
         topbar.className = "topbar";
         topbar.style.position = "absolute";
+        topbar.onmouseup = function () {
+            Note.save();
+        };
         element.appendChild(topbar);
 
         for (let position of ["lm", "lb", "mb", "rb", "rm"]) {
@@ -102,6 +105,9 @@ export class Note {
                 element.setAttribute("startloc", JSON.stringify(note.screenCoordinates));
                 element.setAttribute("startdrag", JSON.stringify({ "x": event.clientX, "y": event.clientY }));
                 element.setAttribute("startresize", JSON.stringify({ "w": note.width, "h": note.height }));
+            };
+            dragger.onmouseup = function () {
+                Note.save();
             };
             element.appendChild(dragger);
         }
@@ -132,9 +138,6 @@ export class Note {
 
         let container = document.getElementById("notes");
         container.appendChild(element);
-        if (Note.notes.length > 0) {
-            document.getElementById("message").innerText = "";
-        }
         return element;
     }
     resize(width: number, height: number, center: { x: number, y: number }): void {

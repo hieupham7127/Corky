@@ -69,7 +69,6 @@ function onmousemove(event: MouseEvent) {
                 }
             }
         }
-        Note.save();
     }
 }
 
