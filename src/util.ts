@@ -16,3 +16,7 @@ export function UUID_generator(): string {
         return v.toString(16);
     });
 }
+
+export function to_date(): string {
+    return new Date().toLocaleDateString();
+}

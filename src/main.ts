@@ -1,7 +1,9 @@
 import { Note } from "./note";
 import { Storage } from "./storage";
+import { Timeline, Item } from "./timeline";
 
 const notesElement = document.getElementById("notes");
+var timeline = Timeline.getIntance();
 
 async function ondblclick(event: MouseEvent): Promise<void> {
     if (event.target != notesElement)
@@ -10,6 +12,8 @@ async function ondblclick(event: MouseEvent): Promise<void> {
     note.element;
     note.resize(400, 300, { x: event.clientX, y: event.clientY });
     Note.notes.push(note);
+
+    timeline.addNote(timeline.first().uuid, note);
 }
 
 function onunload(event: Event) {
@@ -88,9 +92,15 @@ async function init(): Promise<void> {
     for (var note of notes) {
         Note.load(note);
     }
-
     notesElement.ondblclick = ondblclick;
     notesElement.onmousemove = onmousemove;
+
+    /*
+        *Timeline not stored yet
+    //let timelime = await Storage.getTimeline();
+    */
+    timeline.addItem();
+
     window.onresize = onresize;
     window.onunload = onunload;
     window.onbeforeunload = onunload;
