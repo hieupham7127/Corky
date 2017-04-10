@@ -24,9 +24,14 @@ function onresize(event: Event) {
 
 function onmousemove(event: MouseEvent) {
     if (event.buttons & 1) {
-        for (let note of Note.notes) {
+        let note = undefined;
+        for (let _note of Note.notes) {
+            if (_note.element.getAttribute("dragging") && (note === undefined || _note.id > note.id)) {
+                note = _note;
+            }
+        }
+        if (note !== undefined) {
             let element = note.element;
-            let direction: string;
             if (element.getAttribute("dragging")) {
                 var startdrag = JSON.parse(element.getAttribute("startdrag"));
                 var px: number = startdrag.x;
@@ -35,7 +40,18 @@ function onmousemove(event: MouseEvent) {
                 var dy = event.clientY - py;
                 note.resize(note.width, note.height, { x: note.screenCoordinates.x + dx, y: note.screenCoordinates.y + dy })
                 element.setAttribute("startdrag", JSON.stringify({ "x": event.clientX, "y": event.clientY }));
-            } else if (direction = element.getAttribute("resizing")) {
+            }
+        }
+        note = undefined;
+        for (let _note of Note.notes) {
+            if (_note.element.getAttribute("resizing") && (note === undefined || _note.id > note.id)) {
+                note = _note;
+            }
+        }
+        if (note !== undefined) {
+            let element = note.element;
+            let direction: string;
+            if (direction = element.getAttribute("resizing")) {
                 var startresize = JSON.parse(element.getAttribute("startresize"));
                 var pw: number = startresize.w;
                 var ph: number = startresize.h;
@@ -97,3 +113,4 @@ async function init(): Promise<void> {
 }
 
 window["init"] = init;
+window["Note"] = Note;

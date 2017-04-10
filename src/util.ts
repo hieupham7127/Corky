@@ -8,3 +8,15 @@ export function randomString(length?: number) {
     }
     return string;
 }
+
+export function findHighestZIndex(elem = "div") {
+    var elems = document.getElementsByTagName(elem);
+    var highest = 0;
+    for (var i = 0; i < elems.length; i++) {
+        var zindex = document.defaultView.getComputedStyle(elems[i], null).getPropertyValue("z-index");
+        if ((parseInt(zindex) > highest) && (zindex != 'auto')) {
+            highest = parseInt(zindex);
+        }
+    }
+    return highest;
+}

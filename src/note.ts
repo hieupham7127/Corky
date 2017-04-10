@@ -1,4 +1,4 @@
-import { randomString } from "./util";
+import { randomString, findHighestZIndex } from "./util";
 import { Storage } from "./storage";
 
 const topbar_s: number = 45;
@@ -28,7 +28,7 @@ export class Note {
     private y: number;
     private _width: number;
     private _height: number;
-    private z: number;
+    private _z: number;
     private _id: string;
     private _element: HTMLElement;
     public Note(id?: string) {
@@ -49,6 +49,13 @@ export class Note {
     set coordinates(coordinates: { x: number, y: number }) {
         this.x = coordinates.x;
         this.y = coordinates.y;
+    }
+    get z() {
+        return this._z;
+    }
+    set z(_z: number) {
+        this._z = _z;
+        this.element.style.zIndex = `${this._z}`;
     }
     get width(): number {
         return this._width;
@@ -92,9 +99,6 @@ export class Note {
         topbar.id = this.id + ":topbar";
         topbar.className = "topbar";
         topbar.style.position = "absolute";
-        topbar.onmouseup = function () {
-            Note.save();
-        };
         element.appendChild(topbar);
 
         for (let position of ["lm", "lb", "mb", "rb", "rm"]) {
@@ -142,7 +146,7 @@ export class Note {
         };
         topbar.appendChild(delBtn);
 
-        element.onmousedown = function (event: MouseEvent) {
+        topbar.onmousedown = function (event: MouseEvent) {
             let target = <HTMLElement>event.target;
             let topbar = <HTMLElement>element.children.namedItem(note.id + ":topbar");
             if (target.id == topbar.id) {
@@ -151,9 +155,13 @@ export class Note {
                 element.style.cursor = "move";
             }
         };
-        element.onmouseup = function (event: MouseEvent) {
+        topbar.onmouseup = function (event: MouseEvent) {
             element.setAttribute("dragging", "");
             element.style.cursor = "text";
+            Note.save();
+        };
+        element.onmouseup = function () {
+            note.focus();
         };
         editor.onkeyup = function (event: KeyboardEvent) {
             if (event.keyCode == 27) {
@@ -164,6 +172,10 @@ export class Note {
         let container = document.getElementById("notes");
         container.appendChild(element);
         return element;
+    }
+    focus() {
+        this.z = findHighestZIndex() + 1;
+        Note.save();
     }
     resize(width: number, height: number, center: { x: number, y: number }): void {
         this.width = width;
@@ -252,7 +264,7 @@ export class Note {
         editor.innerHTML = data.content;
         return note;
     }
-    serialize(): ISerializedNote {
+    serialize(z = this.z): ISerializedNote {
         let editor = <HTMLElement>this.element.children.namedItem(this.id + ":editor");
         let data = {
             "type": this.type,
@@ -260,7 +272,7 @@ export class Note {
             "id": this.id,
             "coordinates": { "x": this.x, "y": this.y },
             "size": { "w": this.width, "h": this.height },
-            "z": this.z,
+            "z": z,
             "content": editor.innerHTML
         };
         return data;
