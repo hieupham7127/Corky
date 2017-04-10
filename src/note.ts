@@ -97,16 +97,6 @@ export class Note {
         };
         element.appendChild(topbar);
 
-        var delBtn: HTMLElement = document.createElement("a");
-        delBtn.className = "close";
-        delBtn.innerHTML = "&times;";
-        delBtn.onclick = function () {
-            if (confirm("Are you sure you want to delete this note?")) {
-                note.destroy(true);
-            }
-        };
-        topbar.appendChild(delBtn);
-
         for (let position of ["lm", "lb", "mb", "rb", "rm"]) {
             var dragger: HTMLElement = document.createElement("div");
             dragger.id = this.id + ":" + position;
@@ -135,6 +125,24 @@ export class Note {
         };
         element.appendChild(editor);
 
+        let checkDelete = function () {
+            console.log(editor.innerHTML);
+            if (editor.innerHTML.length) {
+                if (!confirm("Are you sure you want to delete this note?")) {
+                    return;
+                }
+            }
+            note.destroy(true);
+        };
+
+        var delBtn: HTMLElement = document.createElement("a");
+        delBtn.className = "close";
+        delBtn.innerHTML = "&times;";
+        delBtn.onclick = function () {
+            checkDelete();
+        };
+        topbar.appendChild(delBtn);
+
         element.onmousedown = function (event: MouseEvent) {
             let target = <HTMLElement>event.target;
             let topbar = <HTMLElement>element.children.namedItem(note.id + ":topbar");
@@ -147,6 +155,11 @@ export class Note {
         element.onmouseup = function (event: MouseEvent) {
             element.setAttribute("dragging", "");
             element.style.cursor = "text";
+        };
+        editor.onkeyup = function (event: KeyboardEvent) {
+            if (event.keyCode == 27) {
+                checkDelete();
+            }
         };
 
         let container = document.getElementById("notes");
