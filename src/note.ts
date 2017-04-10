@@ -126,7 +126,6 @@ export class Note {
         element.appendChild(editor);
 
         let checkDelete = function () {
-            console.log(editor.innerHTML);
             if (editor.innerHTML.length) {
                 if (!confirm("Are you sure you want to delete this note?")) {
                     return;
@@ -280,6 +279,5 @@ export class Note {
         }
         Storage.set(Note.notes);
         Note.lastSaved = Date.now();
-        console.log("SAVED");
     }
 }
