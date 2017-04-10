@@ -134,6 +134,8 @@ export class Note {
         editor.className = "editor";
         editor.style.position = "absolute";
         editor.onkeyup = function (event: KeyboardEvent) {
+            if (event.keyCode == 27)
+                checkDelete();
             Note.save();
         };
         let checkDelete = function () {
