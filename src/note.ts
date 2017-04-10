@@ -108,6 +108,7 @@ export class Note {
             };
             dragger.onmouseup = function () {
                 Note.save();
+                element.setAttribute("resizing", "");
             };
             element.appendChild(dragger);
         }
