@@ -12,6 +12,12 @@ async function ondblclick(event: MouseEvent): Promise<void> {
     Note.notes.push(note);
 }
 
+function onresize(event: Event) {
+    for (let note of Note.notes) {
+        note.resize(note.width, note.height, note.screenCoordinates);
+    }
+}
+
 function onmousemove(event: MouseEvent) {
     if (event.buttons & 1) {
         for (let note of Note.notes) {
@@ -81,6 +87,7 @@ async function init(): Promise<void> {
 
     notesElement.ondblclick = ondblclick;
     notesElement.onmousemove = onmousemove;
+    window.onresize = onresize;
 }
 
 window["init"] = init;
