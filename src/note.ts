@@ -94,6 +94,19 @@ export class Note {
         element.className = "note";
         element.style.position = "absolute";
         element.setAttribute("dragging", "");
+        element.onmouseup = function (event: MouseEvent) {
+            element.setAttribute("dragging", "");
+            element.style.cursor = "text";
+        };
+        element.onmousedown = function (event: MouseEvent) {
+            let target = <HTMLElement>event.target;
+            let topbar = <HTMLElement>element.children.namedItem(note.id + ":topbar");
+            if (target.id == topbar.id) {
+                element.setAttribute("dragging", "true");
+                element.setAttribute("startdrag", JSON.stringify({ "x": event.clientX, "y": event.clientY }));
+                element.style.cursor = "move";
+            }
+        };
 
         var topbar: HTMLElement = document.createElement("div");
         topbar.id = this.id + ":topbar";
@@ -125,18 +138,15 @@ export class Note {
         editor.className = "editor";
         editor.style.position = "absolute";
         editor.onkeyup = function (event: KeyboardEvent) {
+            if (event.keyCode == 27)
+                checkDelete();
             Note.save();
         };
-        element.appendChild(editor);
-
         let checkDelete = function () {
-            if (editor.innerHTML.length) {
-                if (!confirm("Are you sure you want to delete this note?")) {
-                    return;
-                }
-            }
-            note.destroy(true);
+            if (editor.innerHTML.trim().length == 0 || confirm("Are you sure you want to delete this note?"))
+                note.destroy(true);
         };
+        element.appendChild(editor);
 
         var delBtn: HTMLElement = document.createElement("a");
         delBtn.className = "close";
@@ -158,6 +168,7 @@ export class Note {
         topbar.onmouseup = function (event: MouseEvent) {
             element.setAttribute("dragging", "");
             element.style.cursor = "text";
+            note.focus();
             Note.save();
         };
         element.onmouseup = function () {
@@ -171,6 +182,8 @@ export class Note {
 
         let container = document.getElementById("notes");
         container.appendChild(element);
+
+        editor.focus();
         return element;
     }
     focus() {
@@ -231,15 +244,6 @@ export class Note {
         drag_rm.style.right = "0";
         drag_rm.style.top = `${topbar_s}px`;
     }
-    destroy(removeElement: boolean) {
-        let self = this;
-        Note.notes = Note.notes.filter(function (note) {
-            return note.id !== self.id;
-        });
-        Note.save(true);
-        if (removeElement)
-            document.getElementById("notes").removeChild(this.element);
-    }
     static load(note: Note): void {
         note.element;
         note.resize(note.width, note.height, note.screenCoordinates);
@@ -291,5 +295,14 @@ export class Note {
         }
         Storage.set(Note.notes);
         Note.lastSaved = Date.now();
+    }
+    destroy(removeElement: boolean) {
+        let self = this;
+        Note.notes = Note.notes.filter(function (note) {
+            return note.id !== self.id;
+        });
+        Note.save(true);
+        if (removeElement)
+            document.getElementById("notes").removeChild(this.element);
     }
 }
