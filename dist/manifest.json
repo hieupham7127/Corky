@@ -1,6 +1,9 @@
 {
     "manifest_version": 2,
     "name": "Corky",
+    "short_name": "corky",
+    "description": "Friendly new-tab sticky notes app.",
+    "author": "Michael Zhang <failed.down@gmail.com>",
     "version": "0.4",
     "chrome_url_overrides": {
         "newtab": "index.html"
