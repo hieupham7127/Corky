@@ -67,6 +67,28 @@ html, body {
     border-top-right-radius: 5px;
     background-color: #ececec;
     cursor: move;
+    position: relative;
+}
+
+#notes .note .topbar .close {
+    position: absolute;
+    top: 12.5px;
+    right: 12.5px;
+    display: block;
+    padding: 0;
+    border-radius: 100px;
+    width: 20px;
+    height: 20px;
+    line-height: 18px;
+    text-align: center;
+    color: #ffffff;
+    font-size: 18px;
+    background-color: rgba(255, 0, 0, 0.5);
+    cursor: pointer;
+}
+
+#notes .note .topbar .close:hover {
+    background-color: rgb(255, 0, 0);
 }
 
 #notes .note .dragger.lm {

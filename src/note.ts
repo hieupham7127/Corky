@@ -97,6 +97,16 @@ export class Note {
         };
         element.appendChild(topbar);
 
+        var delBtn: HTMLElement = document.createElement("a");
+        delBtn.className = "close";
+        delBtn.innerHTML = "&times;";
+        delBtn.onclick = function () {
+            if (confirm("Are you sure you want to delete this note?")) {
+                note.destroy(true);
+            }
+        };
+        topbar.appendChild(delBtn);
+
         for (let position of ["lm", "lb", "mb", "rb", "rm"]) {
             var dragger: HTMLElement = document.createElement("div");
             dragger.id = this.id + ":" + position;
@@ -196,6 +206,15 @@ export class Note {
         drag_rm.style.height = `${height - resizebar_s - topbar_s}px`;
         drag_rm.style.right = "0";
         drag_rm.style.top = `${topbar_s}px`;
+    }
+    destroy(removeElement: boolean) {
+        let self = this;
+        Note.notes = Note.notes.filter(function (note) {
+            return note.id !== self.id;
+        });
+        Note.save(true);
+        if (removeElement)
+            document.getElementById("notes").removeChild(this.element);
     }
     static load(note: Note): void {
         note.element;
