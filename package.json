@@ -1,6 +1,6 @@
 {
   "name": "corky",
-  "version": "0.0.1",
+  "version": "0.4.0",
   "dependencies": {
     "@types/chrome": "0.0.44",
     "@types/es6-promise": "0.0.32",
@@ -10,7 +10,9 @@
     "webpack": "^2.3.2"
   },
   "scripts": {
-    "watch": "webpack --progress --colors --watch"
+    "watch": "webpack --progress --colors --watch",
+    "build": "webpack",
+    "export": "npm run build && zip -r package dist/*"
   },
   "devDependencies": {
     "uglifyjs-webpack-plugin": "^0.4.1"
