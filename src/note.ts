@@ -21,6 +21,8 @@ export interface ISerializedNote {
 
 export class Note {
     public static notes: Note[] = [];
+    private static lastSaved: number = 0;
+    private static intval;
     private _type: NoteType;
     private x: number;
     private y: number;
@@ -232,7 +234,20 @@ export class Note {
         };
         return data;
     }
-    static save() {
+    static save(force = false) {
+        if (!force) {
+            // check if has been recently saved
+            if (Date.now() - Note.lastSaved <= 3000) {
+                if (Note.intval)
+                    clearInterval(Note.intval);
+                Note.intval = setInterval(function () {
+                    Note.save();
+                }, 3000);
+                return;
+            }
+        }
         Storage.set(Note.notes);
+        Note.lastSaved = Date.now();
+        console.log("SAVED");
     }
 }
