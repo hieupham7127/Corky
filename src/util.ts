@@ -18,5 +18,9 @@ export function UUID_generator(): string {
 }
 
 export function to_date(): string {
-    return new Date().toLocaleDateString();
+    return new Date().toLocaleString();
+}
+
+export function isSameDay(dayA: string, dayB: string): boolean {
+    return (dayA.split(",")[0] == dayB.split(",")[0]);
 }

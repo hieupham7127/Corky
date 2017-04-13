@@ -1,5 +1,5 @@
-import { randomString } from "./util";
-import { Storage } from "./storage";
+import { randomString, to_date } from "./util";
+import { NoteStorage } from "./storage";
 
 const topbar_s: number = 45;
 const resizebar_s: number = 10;
@@ -12,6 +12,7 @@ export enum NoteType {
 export interface ISerializedNote {
     id: string;
     type: number;
+    dates: string[];
     lastModified: number;
     coordinates: { x: number, y: number };
     size: { w: number, h: number };
@@ -21,6 +22,7 @@ export interface ISerializedNote {
 
 export class Note {
     public static notes: Note[] = [];
+    private _dates: string[] = [];
     private static lastSaved: number = 0;
     private static intval;
     private _type: NoteType;
@@ -35,6 +37,12 @@ export class Note {
         if (id) {
             this._id = id;
         }
+    }
+    get dates(): string[] {
+        return this._dates;
+    }
+    addDate(): void {
+        this.dates.push(to_date());
     }
     get screenCoordinates(): { x: number, y: number } {
         return { "x": this.x * window.innerWidth, "y": this.y * window.innerHeight };
@@ -136,6 +144,7 @@ export class Note {
         editor.onkeyup = function (event: KeyboardEvent) {
             if (event.keyCode == 27)
                 checkDelete();
+            note.addDate();
             Note.save();
         };
         let checkDelete = function () {
@@ -156,6 +165,7 @@ export class Note {
         container.appendChild(element);
 
         editor.focus();
+        this.addDate();
         return element;
     }
     resize(width: number, height: number, center: { x: number, y: number }): void {
@@ -240,6 +250,7 @@ export class Note {
         let editor = <HTMLElement>this.element.children.namedItem(this.id + ":editor");
         let data = {
             "type": this.type,
+            "dates": this.dates,
             "lastModified": 0, // TODO
             "id": this.id,
             "coordinates": { "x": this.x, "y": this.y },
@@ -261,7 +272,7 @@ export class Note {
                 return;
             }
         }
-        Storage.set(Note.notes);
+        NoteStorage.set(Note.notes);
         Note.lastSaved = Date.now();
     }
     destroy(removeElement: boolean) {
@@ -272,5 +283,11 @@ export class Note {
         Note.save(true);
         if (removeElement)
             document.getElementById("notes").removeChild(this.element);
+    }
+    static findNoteById(id: string) {
+        for (let note of this.notes) 
+            if (id == note.id) 
+                return note;
+        return null;
     }
 }

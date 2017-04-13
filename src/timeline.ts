@@ -1,24 +1,27 @@
 import { Note } from "./note";
-import { UUID_generator, to_date } from "./util";
+import { UUID_generator, to_date, isSameDay } from "./util";
 
 const timeline = document.getElementById("timeline");
 
 export class Timeline {
-    private static _instance:Timeline = new Timeline();
+    private static _instance: Timeline = new Timeline();
     private _items: Item[];
     constructor() {
         if (Timeline._instance) {
             // TODO: create parent Singleton class that is Thread-safe
             throw new Error("Cannot create new instance. Timeline is a singleton");        
         }
+        this.items = [];
         Timeline._instance = this;
-        this._items = [];
     }    
     public static getIntance(): Timeline {
         return Timeline._instance;
     }
-    public get items(): Item[] {
+    get items(): Item[] {
         return this._items;
+    }
+    set items(items: Item[]) {
+        this._items = items;
     }
     public addItem(): void {
         /*
@@ -26,20 +29,35 @@ export class Timeline {
         */
         var item: Item = new Item();
         item.element;
-        this._items.push(item);
+        this.items.push(item);
     }
     public first(): Item {
         return this.items[0];
     }
+    public findUUID(uuid: string): Item {
+        for ( var item of this.items ) 
+            if (uuid == item.uuid) 
+                return item;
+        return null;
+    }
+    public findDate(date: string): Item {
+        for ( var item of this.items ) 
+            if (date == item.date) 
+                return item;
+        return null;
+    }
     public addNote(uuid: string, note: Note): void {
         /*
             Convert items to hashmap<uuid, Item> later
+            Need to modify findUUID and findDate functions
         */
-        for ( var item of this.items ) 
-            if (uuid == item.uuid) {
-                item.addNote(note);
-                return;
-            }
+        this.findUUID(uuid).addNote(note);
+    }
+    public removeNote(note: Note): void {
+        for (let date of note.dates) {
+            let item = this.findDate(date);
+            item.removeNote(note);
+        }
     }
 }
 
@@ -48,6 +66,11 @@ export class Timeline {
     We don't know how many types of Item aside from Date yet.
     Therefore in the future, Item class will become parent class.
 */
+export interface ISerializedItem {
+    uuid: string;
+    date: string;
+    notes: string[];
+}
 export class Item {
     private _uuid: string;
     private _date: string;
@@ -71,22 +94,46 @@ export class Item {
     }
     public addNote(note: Note): void {
         this.notes.push(note);
-    }    
+    }
+    public removeNote(target: Note): void {
+        let notes = this.notes;
+        for (var i = 0; i < notes.length; i++) 
+            if (notes[i].id == target.id) {
+                notes.splice(i, 1);
+                return;
+            }
+    }
     get element(): HTMLElement {
         var element: HTMLElement;
         if ((element = document.getElementById("item-" + this.uuid)) != null) {
             return element;
         }
-        /*for (let note of Note.notes)
+        console.log(this.date);
+        console.log(Note.notes);
+        for (let note of Note.notes)
             if (isSameDay(this.date, note.dates[0])) 
-                this.notes.push(note);*/
+                this.notes.push(note);
         element = document.createElement("div");
         element.id = "item-" + this.uuid;
         element.className = "timeline-item";
 
         var el_date : HTMLElement = document.createElement("div"); 
         el_date.className = "date";
-        el_date.innerText = this.date.split(" ")[0];
+        el_date.innerText = this.date.split(",")[0];
+
+        let notes = this.notes;
+        var info : HTMLElement = document.createElement("div"); 
+        info.className = "info";
+        info.innerText = "";
+        /*
+            Create EventHandler for notes array to automatically update info
+        */
+        for (var i = 0; i < notes.length; i++) {
+            let note = notes[i];
+            info.innerText += "note-" + note.id 
+                            + (note.dates.length == 1 ? " created at " : " last modified at ") 
+                            + note.dates[note.dates.length - 1] + "\n";
+        }
 
         var marker : HTMLElement = document.createElement("span");
         marker.className = "marker";
@@ -94,18 +141,29 @@ export class Item {
         dot.className = "dot";
         marker.appendChild(dot);
         el_date.appendChild(marker);
-
-        var info : HTMLElement = document.createElement("div"); 
-        info.className = "info";
-        /*
-            Create EventHandler for notes array to automatically update info
-            for (let note of this.notes)
-                info.innerText += "note-" + note.id + " is modified at " + note.dates[note.dates.length];
-        */
         element.appendChild(el_date);
         element.appendChild(info);
 
         timeline.appendChild(element);
         return element;
+    }
+    static deserialize(data: ISerializedItem): Item {
+        let item = new Item();
+        item._uuid = data.uuid;
+        item._date = data.date;
+        for (let note_id of data.notes)
+            item.notes.push(Note.findNoteById(note_id));
+        return item;
+    }
+    serialize(): ISerializedItem {
+        var notes: string[] = [];
+        for (let note of this.notes)
+            notes.push(note.id);
+        let data = {
+            "uuid": this.uuid,
+            "date": this.date,
+            "notes": notes            
+        };
+        return data;
     }
 }
