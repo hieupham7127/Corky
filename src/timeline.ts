@@ -13,7 +13,7 @@ export class Timeline {
         }
         this.items = [];
         Timeline._instance = this;
-    }    
+    }        
     public static getIntance(): Timeline {
         return Timeline._instance;
     }
@@ -42,9 +42,13 @@ export class Timeline {
     }
     public findDate(date: string): Item {
         for ( var item of this.items ) 
-            if (date == item.date) 
+            if (isSameDay(date, item.date)) 
                 return item;
         return null;
+    }
+    public validate() {
+        if (this.first() != null) 
+            this.first().setText();
     }
     public addNote(uuid: string, note: Note): void {
         /*
@@ -52,11 +56,13 @@ export class Timeline {
             Need to modify findUUID and findDate functions
         */
         this.findUUID(uuid).addNote(note);
+        this.validate();
     }
     public removeNote(note: Note): void {
         for (let date of note.dates) {
             let item = this.findDate(date);
-            item.removeNote(note);
+            if (item != null) 
+                item.removeNote(note);
         }
     }
 }
@@ -107,37 +113,32 @@ export class Item {
         var element: HTMLElement;
         if ((element = document.getElementById("item-" + this.uuid)) != null) {
             return element;
-        }
-        console.log(this.date);
-        console.log(Note.notes);
+        }   
+        // push notes to an item     
         for (let note of Note.notes)
-            if (isSameDay(this.date, note.dates[0])) 
+            if (isSameDay(this.date, note.dates[0]))
                 this.notes.push(note);
         element = document.createElement("div");
         element.id = "item-" + this.uuid;
         element.className = "timeline-item";
 
-        var el_date : HTMLElement = document.createElement("div"); 
+        var el_date: HTMLElement = document.createElement("div"); 
         el_date.className = "date";
         el_date.innerText = this.date.split(",")[0];
 
         let notes = this.notes;
-        var info : HTMLElement = document.createElement("div"); 
+        var info: HTMLElement = document.createElement("div"); 
         info.className = "info";
         info.innerText = "";
-        /*
-            Create EventHandler for notes array to automatically update info
-        */
-        for (var i = 0; i < notes.length; i++) {
-            let note = notes[i];
+        for (var i = 0; i < this.notes.length; i++) {
+            let note = this.notes[i];
             info.innerText += "note-" + note.id 
                             + (note.dates.length == 1 ? " created at " : " last modified at ") 
                             + note.dates[note.dates.length - 1] + "\n";
         }
-
-        var marker : HTMLElement = document.createElement("span");
+        var marker: HTMLElement = document.createElement("span");
         marker.className = "marker";
-        var dot : HTMLElement = document.createElement("span");
+        var dot: HTMLElement = document.createElement("span");
         dot.className = "dot";
         marker.appendChild(dot);
         el_date.appendChild(marker);
@@ -146,6 +147,18 @@ export class Item {
 
         timeline.appendChild(element);
         return element;
+    }
+    public setText(): void {        
+        var text = "";
+        for (var i = 0; i < this.notes.length; i++) {
+            let note = this.notes[i];
+            text += "note-" + note.id 
+                            + (note.dates.length == 1 ? " created at " : " last modified at ") 
+                            + note.dates[note.dates.length - 1] + "\n";
+        }
+        var item_id = "item-" + this.uuid;
+        var info: HTMLElement = <HTMLElement>document.getElementById(item_id).getElementsByClassName("info")[0];
+        info.innerText = text;
     }
     static deserialize(data: ISerializedItem): Item {
         let item = new Item();

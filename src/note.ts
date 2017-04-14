@@ -1,5 +1,6 @@
 import { randomString, to_date } from "./util";
 import { NoteStorage } from "./storage";
+import { Timeline } from "./timeline";
 
 const topbar_s: number = 45;
 const resizebar_s: number = 10;
@@ -144,13 +145,19 @@ export class Note {
         editor.onkeyup = function (event: KeyboardEvent) {
             if (event.keyCode == 27)
                 checkDelete();
-            note.addDate();
             Note.save();
         };
         let checkDelete = function () {
-            if (editor.innerHTML.trim().length == 0 || confirm("Are you sure you want to delete this note?")) 
+            if (editor.innerHTML.trim().length == 0 || confirm("Are you sure you want to delete this note?")) {
                 note.destroy(true);
+                Timeline.getIntance().removeNote(note);
+                Timeline.getIntance().validate();
+            }
         };
+        editor.addEventListener("focusout", function() {
+            note.addDate();
+            Timeline.getIntance().validate();
+        });
         element.appendChild(editor);
 
         var delBtn: HTMLElement = document.createElement("a");
@@ -165,7 +172,8 @@ export class Note {
         container.appendChild(element);
 
         editor.focus();
-        this.addDate();
+        if (note.dates.length == 0) 
+            note.addDate();
         return element;
     }
     resize(width: number, height: number, center: { x: number, y: number }): void {
@@ -224,6 +232,7 @@ export class Note {
     }
     static load(note: Note): void {
         note.element;
+        console.log(note.dates);
         note.resize(note.width, note.height, note.screenCoordinates);
         Note.notes.push(note);
     }
@@ -241,6 +250,7 @@ export class Note {
         note.width = data.size.w;
         note.height = data.size.h;
         note.z = data.z;
+        note._dates = data.dates;
 
         let editor = <HTMLElement>note.element.children.namedItem(note.id + ":editor");
         editor.innerHTML = data.content;
